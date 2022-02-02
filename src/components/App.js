@@ -9,12 +9,16 @@ class App extends React.Component {
   ]}
   prevId = 0;
 
-  handleNoteUpdate = (index, updatedText) => {
+  handleNoteUpdate = async(index, updatedText) => {
+    console.log(index);
       this.state.notes[index].value = updatedText
       this.forceUpdate()
-      // this.setState( prevState => ({
-      //   value: prevState.notes[index].value = updatedText
-      // }));
+      const response = await fetch(`http://localhost:5000/update/:${index}/:${updatedText}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     }
 
   handleAddNote = (title) => {
@@ -74,6 +78,16 @@ class App extends React.Component {
     else
       console.log("wrong username or password");
     }
+  }
+
+  handlePassword = async() => {
+    const response = await fetch(`http://localhost:5000/update/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
   }
 
   render() {

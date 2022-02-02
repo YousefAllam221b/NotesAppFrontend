@@ -10,8 +10,8 @@ class NoteCard extends React.Component
   }
 
   handleChange = (event) => {
+    console.log("notecard");
     this.props.changeText(this.props.index, event.target.value)
-
   }
 
   render() {
@@ -20,7 +20,6 @@ class NoteCard extends React.Component
         <div id = 'note-title' className = 'd-flex align-items-center justify-content-between'>
           <h4>{ this.props.title }</h4>
           <button  type="button" className="me-3" >Save</button>
-          <button  type="button" className="me-3" >Delete</button>
           <button onClick = {this.handleDeleteNote} id="close-button" type="button" className="btn-close text-reset me-3" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 
         </div>
