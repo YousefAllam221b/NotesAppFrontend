@@ -1,0 +1,32 @@
+/* ELEMENT STYLES -------------------- */
+
+
+
+
+
+
+
+
+
+.note-content{
+  width: 15rem;
+  height: 15rem;
+  resize: none;
+  border-width: 1px;
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+  resize: none;
+  outline: none;
+  background-color: #3870ff;
+}
+
+#note-title
+{
+  background-color: #ededed;
+}
+
+#close-button
+{
+  margin-right: 0!important;
+}
