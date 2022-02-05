@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import App from './components/App';
-import AddNoteButton from './components/AddNoteButton';
 import './index.css';
 
 ReactDOM.render(

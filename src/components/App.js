@@ -11,17 +11,17 @@ class App extends React.Component {
 
   handleNoteUpdate = async(index, updatedText) => {
     console.log(index);
-      this.state.notes[index].value = updatedText
-      this.forceUpdate()
-      const response = await fetch(`http://localhost:5000/update/:${index}/:${updatedText}`, {
+    this.state.notes[index].value = updatedText
+    this.forceUpdate()
+    const response = await fetch(`http://localhost:5000/update/:${index}/:${updatedText}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
     });
-    }
+  }
 
-  handleAddNote = (title) => {
+  handleAddNote = async(title) => {
       this.setState( prevState => {
         return {
           notes: [
@@ -34,18 +34,30 @@ class App extends React.Component {
           ]
         };
       });
+      const response = await fetch(`http://localhost:5000/addNote/:${title}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     }
 
-  handleDeleteNote = (index) => {
-        const newStates = [...this.state.notes];
-        newStates.splice(index, 1);
-
-        this.setState(state => ({
-            notes: newStates
-        }));
+  handleDeleteNote = async(index) => {
+    const newStates = [...this.state.notes];
+    newStates.splice(index, 1);
+    this.setState(state => ({
+      notes: newStates
+    }));
+    console.log(index);
+    const response = await fetch(`http://localhost:5000/deleteNote/${index}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   }
 
-   handleLogin = async(username, password) => {
+  handleLogin = async(username, password) => {
     if (username == "" || password == "")
     {
       console.log("please write username and password");
@@ -61,6 +73,8 @@ class App extends React.Component {
     {
       data.Notes.forEach((note) => 
         this.setState( prevState => {
+          if (note != null)
+          {
           return {
             notes: [
               ...prevState.notes,
@@ -71,6 +85,7 @@ class App extends React.Component {
               }
             ]
           };
+        }
         })
       );
       return data.Notes;
@@ -92,13 +107,15 @@ class App extends React.Component {
 
   render() {
     ReactDOM.render(
-      <AddNoteButton addNote = {this.handleAddNote} />,
-        document.getElementById('add-note-button'),
+      <div className = 'd-flex justify-content-evenly'>
+        <h1 id = 'main-title' className = 'navbar-brand'>Notes App</h1>
+        <AddNoteButton addNote = {this.handleAddNote} />
+        <LoginButton userLogin = {this.handleLogin} />
+      </div>
+      
+      ,document.getElementById('main-nav')
     )
-    ReactDOM.render(
-    <LoginButton userLogin = {this.handleLogin} />,
-        document.getElementById('login')
-    )
+    
     return (
       <div id = 'app-container' className = 'container-fluid d-flex flex-column justify-content-center align-items-center'>
           <div id = 'notes-container' className = 'container d-flex justify-content-center wrap'>
