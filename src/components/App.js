@@ -9,6 +9,8 @@ class App extends React.Component {
   loggedin: false}
   prevId = 0;
 
+ 
+
   // Handles Updating textarea of each note
   handleNoteUpdate = async(index, updatedText) => {
     this.state.notes[index].value = updatedText

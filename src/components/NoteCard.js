@@ -3,6 +3,24 @@ import Note from './Note';
 
 class NoteCard extends React.Component
 {
+
+  debounce = (func, wait, immediate) => {
+    let timeout
+  
+    return function() {
+      const context = this, args = arguments
+      const later = function() {
+        timeout = null
+        if (!immediate) func.apply(context, args)
+      }
+  
+      const callNow = immediate && !timeout
+      clearTimeout(timeout)
+      timeout = setTimeout(later, wait)
+      if (callNow) func.apply(context, args)
+    }
+  }
+
   handleDeleteNote = (e) => {
       e.stopPropagation();
       e.preventDefault();
@@ -10,7 +28,10 @@ class NoteCard extends React.Component
   }
 
   handleChange = (event) => {
-    this.props.changeText(this.props.index, event.target.value)
+    console.log(event.target.value + " ");
+    this.debounce(this.props.changeText(this.props.index, event.target.value))
+    
+    
   }
 
   handleTitleChange = (event) => {
