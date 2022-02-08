@@ -126,31 +126,18 @@ class App extends React.Component {
   }
 
   // Handles Login Operation
-  handleLogin = async(username, password) => {
-    if (username == "" || password == "")
-    {
-      console.log("please enter username and password");
-    } else {
-    // Check Entered username and password
-    const data = await this.getUserInfo(username, password);
-    if (data)
-    {
-      // Update the states with the User entered Info
-      this.setState(state => ({
-        loggedin: true,
-        userID: data._id,
-      })); 
-      
-      // Add the notes added before login to the User Notes
-      await this.addNotesBeforeLogin();
-      
-      const allData = await this.getUserInfo(username, password);
-      // Show all notes
-      this.showAllNotes(allData);
-    }
-    else
-      console.log("wrong username or password");
-    }
+  handleLogin = async(username, password, data) => { 
+        this.setState(state => ({
+          loggedin: true,
+          userID: data._id,
+        })); 
+        
+        // Add the notes added before login to the User Notes
+        await this.addNotesBeforeLogin();
+        
+        const allData = await this.getUserInfo(username, password);
+        // Show all notes
+        this.showAllNotes(allData);
   }
 
   // Get User info with input username and password.
@@ -159,8 +146,7 @@ class App extends React.Component {
     const response = await fetch(`http://localhost:5000/login/${username}/${password}`, {
       method: "GET"
     });
-    const data = await response.json();
-    return data;
+    return await response.json();
   }
 
   // Add the notes added before login to the User Notes
@@ -214,21 +200,12 @@ class App extends React.Component {
 
   // Handling Register operation
   handleRegister = async(username, password) =>
-  {
-    if (username == "" || password == "")
-      console.log("please write username and password");
-    else
-    {
-      // Check if Username is available
-      if(await this.checkUsername(username))
-        console.log("Username already taken");
-      else
-      {
-        // Register
-        await this.regsiter(username, password);
-        await this.handleLogin(username, password);
-      }
-    }
+  { 
+    // Accepts and Register the data 
+    await fetch(`http://localhost:5000/register/${username}/${password}`, {
+          method: "POST"
+    });
+    await this.handleLogin(username, password);
   }
 
   // Checks wether the Username is available or already exists
@@ -240,16 +217,7 @@ class App extends React.Component {
           "Content-Type": "application/json",
         },
       });
-    const data = await response.json();
-    return data
-  }
-
-  // Accepts and Register the data 
-  regsiter = async(username, password) =>
-  {
-    await fetch(`http://localhost:5000/register/${username}/${password}`, {
-          method: "POST"
-    });
+    return await response.json();
   }
   
   render() {
@@ -258,7 +226,7 @@ class App extends React.Component {
       <div className = 'd-flex justify-content-evenly'>
         <h1 id = 'main-title' className = 'navbar-brand'>Notes App</h1>
         <AddNoteButton addNote = {this.handleAddNote} />  
-        {!this.state.loggedin && <LoginButton userLogin = {this.handleLogin} userRegister = {this.handleRegister} />}
+        {!this.state.loggedin && <LoginButton userLogin = {this.handleLogin} userRegister = {this.handleRegister} getInfo = {this.getUserInfo} />}
         {this.state.loggedin && <input type = 'button' value = 'Logout' onClick={this.handleLogout}/>}
       </div>
       ,document.getElementById('main-nav')
