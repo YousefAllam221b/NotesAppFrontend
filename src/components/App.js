@@ -5,81 +5,113 @@ import NoteCard from './NoteCard';
 import AddNoteButton from './AddNoteButton';
 class App extends React.Component {
   // States
-  state = {notes: [],
-  loggedin: false}
+  state = {
+    notes: [],
+    loggedin: false,
+    missingInfo: false,
+    wrongInfo: false,
+    currentText: '',
+    typing: false,
+    typingTimeout: 0,
+    currentTitle: '',
+    titleTyping: false,
+    titleTypingTimeout: 0
+  }
   prevId = 0;
 
- 
-
   // Handles Updating textarea of each note
-  handleNoteUpdate = async(index, updatedText) => {
+  handleNoteUpdate = async(noteID,updatedText) => {
+    var index = this.state.notes.findIndex(note => note.id === noteID);
     this.state.notes[index].value = updatedText
     this.forceUpdate()
+    const self = this;
+    if (self.state.typingTimeout) {
+       clearTimeout(self.state.typingTimeout);
+    }
     if (this.state.loggedin)
     {
-      const response = await fetch(`http://localhost:5000/update/${this.state.userID}/${index}/${updatedText}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      self.setState({
+        currentText: updatedText,
+        typing: false,
+        typingTimeout: setTimeout(async function () {
+          await fetch(`http://localhost:5000/update/${self.state.userID}/${noteID}/${updatedText}`, {
+            method: "POST"
+          });
+          }, 1000)
+     });
     }
   }
 
   // Handles Updating textarea of each note
-  handleNoteTitleUpdate = async(index, updatedText) => {
+  handleNoteTitleUpdate = async(noteID, updatedText) => {
+    var index = this.state.notes.findIndex(note => note.id === noteID);
     this.state.notes[index].title = updatedText
     this.forceUpdate()
+    const self = this;
+    if (self.state.titleTypingTimeout) {
+       clearTimeout(self.state.titleTypingTimeout);
+    }
     if (this.state.loggedin)
     {
-      const response = await fetch(`http://localhost:5000/updateTitle/${this.state.userID}/${index}/${updatedText}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      self.setState({
+        currentTitle: updatedText,
+        titleTyping: false,
+        titleTypingTimeout: setTimeout(async function () {
+          await fetch(`http://localhost:5000/updateTitle/${self.state.userID}/${noteID}/${updatedText}`, {
+            method: "POST"
+          });
+          }, 1000)
+     });
     }
   }
 
-  // Handles adding new note
+  // Handles adding New note
   handleAddNote = async(title) => {
-    this.setState( prevState => {
-      return {
-        notes: [
-          ...prevState.notes,
-          {
-            value: '',
-            title,
-            id: this.prevId +=1
-          }
-        ]
-      };
-    });
+    // Adding the Database with the New Note
     if (this.state.loggedin)
     {
-        const response = await fetch(`http://localhost:5000/addNote/${this.state.userID}/${title}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response =  await fetch(`http://localhost:5000/addNote/${this.state.userID}/${title}`, {
+        method: "POST"
+      });
+      const noteID = await response.json();
+      this.setState( prevState => {
+        return {
+          notes: [
+            ...prevState.notes,
+            {
+              value: '',
+              title,
+              id: noteID
+            }
+          ]
+        };
+      });
+    } else {
+      this.setState( prevState => {
+        return {
+          notes: [
+            ...prevState.notes,
+            {
+              value: '',
+              title
+            }
+          ]
+        };
       });
     }
   }
 
   // Handles Deleting a note
-  handleDeleteNote = async(index) => {
-    const newStates = [...this.state.notes];
-    newStates.splice(index, 1);
-    this.setState(state => ({
-      notes: newStates
-    }));
+  handleDeleteNote = async(noteID) => {
+    this.setState(prevState => {
+      const notes = prevState.notes.filter(note => note.id !== noteID);
+      return { notes };
+  });
+    
     if (this.state.loggedin)
     {
-      const response = await fetch(`http://localhost:5000/deleteNote/${this.state.userID}/${index}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+     await fetch(`http://localhost:5000/deleteNote/${this.state.userID}/${noteID}`, {
+        method: "POST"
       });
     }
   }
@@ -89,9 +121,7 @@ class App extends React.Component {
     this.setState(state => ({
       loggedin: false,
       notes: [],
-      userID: "",
-      username: "",
-      password: ""
+      userID: ""
     })); 
   }
 
@@ -99,19 +129,16 @@ class App extends React.Component {
   handleLogin = async(username, password) => {
     if (username == "" || password == "")
     {
-      console.log("please write username and password");
+      console.log("please enter username and password");
     } else {
     // Check Entered username and password
     const data = await this.getUserInfo(username, password);
-    
     if (data)
     {
       // Update the states with the User entered Info
       this.setState(state => ({
         loggedin: true,
         userID: data._id,
-        username: username,
-        password: password
       })); 
       
       // Add the notes added before login to the User Notes
@@ -130,10 +157,7 @@ class App extends React.Component {
   getUserInfo = async(username, password) =>
   {
     const response = await fetch(`http://localhost:5000/login/${username}/${password}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      method: "GET"
     });
     const data = await response.json();
     return data;
@@ -142,14 +166,24 @@ class App extends React.Component {
   // Add the notes added before login to the User Notes
   addNotesBeforeLogin = async() =>
   {
-    for (const note of this.state.notes)
+    for (let i = 0; i < this.state.notes.length; i++)
     {
-      const response = await fetch(`http://localhost:5000/addNote/${this.state.userID}/${note.title}/${note.value}`, {
-        method: "POST",
-        headers: {
-        "Content-Type": "application/json",
-        },
+      const response = await fetch(`http://localhost:5000/addNote/${this.state.userID}/${this.state.notes[i].title}/${this.state.notes[i].value}`, {
+        method: "POST"
       });
+      const noteID = await response.json();
+
+      this.setState(prevState => ({
+        notes: [
+            ...prevState.notes.slice(0,i),
+            {
+                ...prevState.notes[i],
+                _id: noteID
+            },
+            ...prevState.notes.slice(i + 1)
+        ]
+    }));
+
     }
   }
 
@@ -169,7 +203,7 @@ class App extends React.Component {
                 {
                   value: note["value"],
                   title: note["title"],
-                  id: this.prevId +=1
+                  id: note['_id']
                 }
               ]
             };
@@ -213,13 +247,9 @@ class App extends React.Component {
   // Accepts and Register the data 
   regsiter = async(username, password) =>
   {
-    const response = await fetch(`http://localhost:5000/register/${username}/${password}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+    await fetch(`http://localhost:5000/register/${username}/${password}`, {
+          method: "POST"
     });
-    const data = await response.json();
   }
   
   render() {
@@ -239,7 +269,7 @@ class App extends React.Component {
       <div id = 'app-container' className = 'container-fluid d-flex flex-column justify-content-center align-items-center'>
           <div id = 'notes-container' className = 'container d-flex justify-content-center wrap'>
             {this.state.notes.map( (note, index) =>
-              <NoteCard changeText = {this.handleNoteUpdate} changeTitle = {this.handleNoteTitleUpdate} value = {note.value} index = {index} title = {note.title} deleteNote = {this.handleDeleteNote}/>
+              <NoteCard changeText = {this.handleNoteUpdate} changeTitle = {this.handleNoteTitleUpdate} noteInfo ={note} deleteNote = {this.handleDeleteNote}/>
             )}
           </div>
 

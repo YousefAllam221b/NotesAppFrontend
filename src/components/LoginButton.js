@@ -16,7 +16,6 @@ class LoginButton extends React.Component{
     this.props.userRegister(this.username.current.value, this.password.current.value);
   }
 
-
   render()
   {
     return (
